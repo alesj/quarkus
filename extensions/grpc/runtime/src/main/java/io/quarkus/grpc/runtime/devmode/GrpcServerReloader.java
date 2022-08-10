@@ -1,30 +1,32 @@
 package io.quarkus.grpc.runtime.devmode;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.ListIterator;
 
 import io.grpc.ServerInterceptor;
-import io.grpc.ServerMethodDefinition;
+import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
-import io.grpc.internal.ServerImpl;
 import io.quarkus.dev.testing.GrpcWebSocketProxy;
 import io.quarkus.grpc.stubs.ServerCalls;
 import io.quarkus.grpc.stubs.StreamCollector;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ProfileManager;
-import io.vertx.grpc.VertxServer;
+import io.vertx.grpc.server.GrpcServer;
+import io.vertx.grpc.server.GrpcServiceBridge;
 
 public class GrpcServerReloader {
-    private static volatile VertxServer server = null;
+    private static volatile GrpcServer server = null;
+    private static volatile List<GrpcServiceBridge> bridges;
 
-    public static VertxServer getServer() {
+    public static GrpcServer getServer() {
         return server;
     }
 
-    public static void init(VertxServer grpcServer) {
+    public static void init(GrpcServer grpcServer, List<GrpcServiceBridge> grpcBridges) {
         server = grpcServer;
-        ServerCalls.setStreamCollector(GrpcServerReloader.devModeCollector());
+        bridges = grpcBridges;
+        ServerCalls.setStreamCollector(devModeCollector());
     }
 
     public static StreamCollector devModeCollector() {
@@ -35,62 +37,44 @@ public class GrpcServerReloader {
     }
 
     public static void reset() {
-        try {
-            if (server == null) {
-                return;
-            }
-
-            Field registryField = ServerImpl.class.getDeclaredField("registry");
-            registryField.setAccessible(true);
-            Object registryObject = registryField.get(server.getRawServer());
-
-            forceSet(registryObject, "services", null);
-            forceSet(registryObject, "methods", null);
-            forceSet(server.getRawServer(), "interceptors", null);
-
-            StreamCollector streamCollector = ServerCalls.getStreamCollector();
-            if (!(streamCollector instanceof DevModeStreamsCollector)) {
-                throw new IllegalStateException("Non-dev mode streams collector used in development mode");
-            }
-            ((DevModeStreamsCollector) streamCollector).shutdown();
-            GrpcWebSocketProxy.closeAll();
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException("Unable to reinitialize gRPC server", e);
+        if (server == null) {
+            return;
         }
+
+        ListIterator<GrpcServiceBridge> list = bridges.listIterator(bridges.size());
+        while (list.hasPrevious()) {
+            GrpcServiceBridge bridge = list.previous();
+            bridge.unbind(server);
+        }
+
+        StreamCollector streamCollector = ServerCalls.getStreamCollector();
+        if (!(streamCollector instanceof DevModeStreamsCollector)) {
+            throw new IllegalStateException("Non-dev mode streams collector used in development mode");
+        }
+        ((DevModeStreamsCollector) streamCollector).shutdown();
+        GrpcWebSocketProxy.closeAll();
     }
 
     public static void reinitialize(List<ServerServiceDefinition> serviceDefinitions,
-            Map<String, ServerMethodDefinition<?, ?>> methods,
             List<ServerInterceptor> sortedInterceptors) {
         if (server == null) {
             return;
         }
-        try {
 
-            Field registryField = ServerImpl.class.getDeclaredField("registry");
-            registryField.setAccessible(true);
-            Object registryObject = registryField.get(server.getRawServer());
-            forceSet(registryObject, "services", serviceDefinitions);
-            forceSet(registryObject, "methods", methods);
-
-            ServerInterceptor[] interceptorsArray = sortedInterceptors.toArray(new ServerInterceptor[0]);
-            forceSet(server.getRawServer(), "interceptors", interceptorsArray);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException("Unable to reinitialize gRPC server data", e);
+        List<GrpcServiceBridge> newBridges = new ArrayList<>();
+        for (ServerServiceDefinition definition : serviceDefinitions) {
+            ServerServiceDefinition intercept = ServerInterceptors.intercept(definition, sortedInterceptors);
+            GrpcServiceBridge bridge = GrpcServiceBridge.bridge(intercept);
+            bridge.bind(server);
+            newBridges.add(bridge);
         }
-    }
 
-    private static void forceSet(Object object, String fieldName, Object value)
-            throws NoSuchFieldException, IllegalAccessException {
-        Field field = object.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-
-        field.set(object, value);
+        bridges = newBridges;
     }
 
     public static void shutdown() {
         if (server != null) {
-            server.shutdown();
+            // TODO server.shutdown(); // unbind server from Vertx http server?!
             server = null;
         }
     }
