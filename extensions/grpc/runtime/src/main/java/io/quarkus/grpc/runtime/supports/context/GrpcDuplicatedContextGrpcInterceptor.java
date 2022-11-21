@@ -17,22 +17,15 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.quarkus.grpc.GlobalInterceptor;
+import io.quarkus.grpc.runtime.Interceptors;
 import io.smallrye.common.vertx.VertxContext;
 import io.vertx.core.Context;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 
 @ApplicationScoped
 @GlobalInterceptor
 public class GrpcDuplicatedContextGrpcInterceptor implements ServerInterceptor, Prioritized {
     private static final Logger log = Logger.getLogger(GrpcDuplicatedContextGrpcInterceptor.class.getName());
-
-    public GrpcDuplicatedContextGrpcInterceptor() {
-    }
-
-    private static boolean isRootContext(Context context) {
-        return !VertxContext.isDuplicatedContext(context);
-    }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call,
@@ -57,7 +50,7 @@ public class GrpcDuplicatedContextGrpcInterceptor implements ServerInterceptor, 
 
     @Override
     public int getPriority() {
-        return Integer.MAX_VALUE;
+        return Interceptors.DUPLICATE_CONTEXT;
     }
 
     static class ListenedOnDuplicatedContext<ReqT, RespT> extends ServerCall.Listener<ReqT> {
@@ -91,7 +84,9 @@ public class GrpcDuplicatedContextGrpcInterceptor implements ServerInterceptor, 
         }
 
         private void close(Throwable t) {
-            if (closed.compareAndSet(false, true)) {
+            // TODO -- "call.isRead" guards against dup calls;
+            //  e.g. onComplete, after onError already closed it
+            if (closed.compareAndSet(false, true) && call.isReady()) {
                 call.close(Status.fromThrowable(t), new Metadata());
             }
         }
@@ -108,18 +103,15 @@ public class GrpcDuplicatedContextGrpcInterceptor implements ServerInterceptor, 
                     close(t);
                 }
             } else {
-                context.runOnContext(new Handler<Void>() {
-                    @Override
-                    public void handle(Void x) {
-                        ServerCall.Listener<ReqT> listener = ListenedOnDuplicatedContext.this.getDelegate();
-                        if (listener == null) {
-                            return;
-                        }
-                        try {
-                            invocation.accept(listener);
-                        } catch (Throwable t) {
-                            close(t);
-                        }
+                context.runOnContext(v -> {
+                    ServerCall.Listener<ReqT> listener = ListenedOnDuplicatedContext.this.getDelegate();
+                    if (listener == null) {
+                        return;
+                    }
+                    try {
+                        invocation.accept(listener);
+                    } catch (Throwable t) {
+                        close(t);
                     }
                 });
             }
@@ -127,12 +119,7 @@ public class GrpcDuplicatedContextGrpcInterceptor implements ServerInterceptor, 
 
         @Override
         public void onMessage(ReqT message) {
-            invoke(new Consumer<ServerCall.Listener<ReqT>>() {
-                @Override
-                public void accept(ServerCall.Listener<ReqT> listener) {
-                    listener.onMessage(message);
-                }
-            });
+            invoke(listener -> listener.onMessage(message));
         }
 
         @Override
