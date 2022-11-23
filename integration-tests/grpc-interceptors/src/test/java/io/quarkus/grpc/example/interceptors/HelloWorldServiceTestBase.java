@@ -22,8 +22,11 @@ import io.quarkus.grpc.test.utils.GRPCTestUtils;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class HelloWorldServiceTestBase {
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private Channel channel;
     private Vertx _vertx;
@@ -88,14 +91,13 @@ class HelloWorldServiceTestBase {
     @Test
     public void testExceptionHandlerOne() {
         HelloExceptionHandlerProvider.invoked = false;
-        GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            client.sayHello(HelloRequest.newBuilder().setName("Fail").build());
-            fail("Should fail!");
-        } catch (Exception e) {
-            assertException(e);
-        }
+        GreeterGrpc.GreeterBlockingStub stub = GreeterGrpc.newBlockingStub(channel);
+        var durations = List.of(1000, 1500, 50);
+        var request = HelloRequest.newBuilder().addAllDuration(durations).build();
+        stub.sayHello(request).forEachRemaining(response -> {
+            log.info("client:" + response.getMessage());
+        });
+        log.info("client: done");
     }
 
     @Test

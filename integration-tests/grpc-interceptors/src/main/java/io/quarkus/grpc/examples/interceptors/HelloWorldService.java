@@ -5,10 +5,13 @@ import examples.HelloReply;
 import examples.HelloRequest;
 import io.grpc.stub.StreamObserver;
 import io.quarkus.grpc.GrpcService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @GrpcService
 public class HelloWorldService extends GreeterGrpc.GreeterImplBase {
-
+    private static final Logger log = LoggerFactory.getLogger(HelloWorldService.class);
+    
     private HelloReply getReply(HelloRequest request) {
         String name = request.getName();
         if (name.equals("Fail")) {
@@ -17,11 +20,27 @@ public class HelloWorldService extends GreeterGrpc.GreeterImplBase {
         return HelloReply.newBuilder().setMessage("Hello " + name).build();
     }
 
+    private void sleep(long d) {
+        try {
+            Thread.sleep(d);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {
-        responseObserver.onNext(getReply(request));
+        request.getDurationList().parallelStream().forEach(duration -> {
+            log.info("server: starting " + duration);
+            sleep(duration);
+            responseObserver.onNext(HelloReply.newBuilder().setMessage("Slept for " + duration + " ms").build());
+            log.info("server: finished " + duration);
+        });
+
+        log.info("server: reached #onCompleted");
+        sleep(2000);
         responseObserver.onCompleted();
-    }
+        log.info("server: finished #onCompleted");    }
 
     @Override
     public StreamObserver<HelloRequest> multiHello(StreamObserver<HelloReply> responseObserver) {
