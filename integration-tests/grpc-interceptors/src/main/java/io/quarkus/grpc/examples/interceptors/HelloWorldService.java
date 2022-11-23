@@ -1,12 +1,14 @@
 package io.quarkus.grpc.examples.interceptors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import examples.GreeterGrpc;
 import examples.HelloReply;
 import examples.HelloRequest;
 import io.grpc.stub.StreamObserver;
 import io.quarkus.grpc.GrpcService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.smallrye.common.annotation.Blocking;
 
 @GrpcService
 public class HelloWorldService extends GreeterGrpc.GreeterImplBase {
@@ -29,6 +31,7 @@ public class HelloWorldService extends GreeterGrpc.GreeterImplBase {
     }
 
     @Override
+    @Blocking
     public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {
         request.getDurationList().parallelStream().forEach(duration -> {
             log.info("server: starting " + duration);
