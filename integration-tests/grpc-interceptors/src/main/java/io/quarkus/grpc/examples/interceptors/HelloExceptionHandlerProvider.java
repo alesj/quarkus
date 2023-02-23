@@ -21,10 +21,14 @@ public class HelloExceptionHandlerProvider implements ExceptionHandlerProvider {
 
     @Override
     public Throwable transform(Throwable t) {
+        return transformX(t);
+    }
+
+    private static Throwable transformX(Throwable t) {
         invoked = true;
         if (t instanceof HelloException) {
             HelloException he = (HelloException) t;
-            return new StatusRuntimeException(Status.ABORTED.withDescription(he.getName()));
+            return new StatusRuntimeException(Status.ABORTED.withDescription(he.getName() + " - mymsg"));
         } else {
             return ExceptionHandlerProvider.toStatusException(t, true);
         }
@@ -38,7 +42,7 @@ public class HelloExceptionHandlerProvider implements ExceptionHandlerProvider {
         @Override
         protected void handleException(Throwable t, ServerCall<A, B> call, Metadata metadata) {
             invoked = true;
-            StatusRuntimeException sre = (StatusRuntimeException) ExceptionHandlerProvider.toStatusException(t, true);
+            StatusRuntimeException sre = (StatusRuntimeException) transformX(t);
             Metadata trailers = sre.getTrailers() != null ? sre.getTrailers() : metadata;
             call.close(sre.getStatus(), trailers);
         }

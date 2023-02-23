@@ -16,6 +16,8 @@ import examples.HelloReply;
 import examples.HelloRequest;
 import examples.MutinyCopycatGrpc;
 import io.grpc.Channel;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.quarkus.grpc.examples.interceptors.HelloExceptionHandlerProvider;
 import io.quarkus.grpc.test.utils.GRPCTestUtils;
@@ -48,9 +50,16 @@ class HelloWorldServiceTestBase {
     }
 
     private static void assertException(Throwable t) {
-        // TODO
         System.out.println("Exception > " + t);
         Assertions.assertTrue(HelloExceptionHandlerProvider.invoked);
+        Assertions.assertTrue(t instanceof StatusRuntimeException);
+        StatusRuntimeException sre = (StatusRuntimeException) t;
+        Status status = sre.getStatus();
+        Assertions.assertNotNull(status);
+        Assertions.assertEquals(Status.ABORTED.getCode(), status.getCode());
+        String description = status.getDescription();
+        Assertions.assertNotNull(description);
+        Assertions.assertTrue(description.contains("mymsg"), "Desc: " + description);
     }
 
     @Test
