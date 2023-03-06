@@ -1,0 +1,11 @@
+quarkus:
+  datasource:
+    db-kind: mysql
+    jdbc:
+      max-size: 16
+  hibernate-orm:
+    second-level-caching-enabled: false
+    database:
+      generation: drop-and-create
+    log:
+      sql: true
