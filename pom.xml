@@ -91,6 +91,7 @@
         <module>independent-projects/resteasy-reactive</module>
         <module>independent-projects/extension-maven-plugin</module>
         <module>independent-projects/junit5-virtual-threads</module>
+        <module>independent-projects/observability</module>
 
         <!-- BOMs and parent POM -->
         <module>bom/application</module>

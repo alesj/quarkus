@@ -130,7 +130,7 @@ public class BookResource {
 ----
 <1> The `Validator` instance is injected via CDI.
 
-Yes it does not compile, `Result` is missing, but we will add it very soon.
+Yes it does not compile, `QueryResult` is missing, but we will add it very soon.
 
 The method parameter (`book`) is created from the JSON payload automatically.
 
@@ -139,7 +139,7 @@ It returns a set of violations.
 If this set is empty, it means the object is valid.
 In case of failures, the messages are concatenated and sent back to the browser.
 
-Let's now create the `Result` class as an inner class:
+Let's now create the `QueryResult` class as an inner class:
 
 [source, java]
 ----
