@@ -12,6 +12,7 @@ service HelloGrpc {
 
 service LegacyHelloGrpc {
   rpc LegacySayHello (HelloRequest) returns (HelloReply) {}
+  rpc LegacySayHelloRuntime (HelloRequest) returns (HelloReply) {}
 }
 
 message HelloRequest {
