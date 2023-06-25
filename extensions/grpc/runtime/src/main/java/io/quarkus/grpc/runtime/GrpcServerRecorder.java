@@ -89,7 +89,8 @@ public class GrpcServerRecorder {
     }
 
     public void initializeGrpcServer(RuntimeValue<Vertx> vertxSupplier,
-            RuntimeValue<Router> routerSupplier,
+            RuntimeValue<Router> mainRouter,
+            RuntimeValue<Router> frameworkRouter,
             GrpcConfiguration cfg,
             ShutdownContext shutdown,
             Map<String, List<String>> blockingMethodsPerService, LaunchMode launchMode) {
@@ -126,13 +127,14 @@ public class GrpcServerRecorder {
                 prodStart(grpcContainer, vertx, configuration, provider, blockingMethodsPerService, launchMode);
             }
         } else {
-            buildGrpcServer(vertx, configuration, routerSupplier, shutdown, blockingMethodsPerService, grpcContainer,
+            buildGrpcServer(vertx, configuration, mainRouter, frameworkRouter, shutdown, blockingMethodsPerService, grpcContainer,
                     launchMode);
         }
     }
 
     // TODO -- handle XDS
-    private void buildGrpcServer(Vertx vertx, GrpcServerConfiguration configuration, RuntimeValue<Router> routerSupplier,
+    private void buildGrpcServer(Vertx vertx, GrpcServerConfiguration configuration,
+            RuntimeValue<Router> mainSupplier, RuntimeValue<Router> frameworkSupplier,
             ShutdownContext shutdown, Map<String, List<String>> blockingMethodsPerService,
             GrpcContainer grpcContainer, LaunchMode launchMode) {
 
@@ -179,7 +181,11 @@ public class GrpcServerRecorder {
         initHealthStorage();
 
         LOGGER.info("Starting new Vert.x gRPC server ...");
-        Route route = routerSupplier.getValue().route().handler(ctx -> {
+        Router router = mainSupplier.getValue();
+        if (router == null) {
+            router = frameworkSupplier.getValue();
+        }
+        Route route = router.route().handler(ctx -> {
             if (!isGrpc(ctx)) {
                 ctx.next();
             } else {
