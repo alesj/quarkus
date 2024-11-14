@@ -227,6 +227,9 @@ public class GrpcServerProcessor {
         IndexView index = combinedIndexBuildItem.getIndex();
         Collection<ClassInfo> bindableServices = index.getAllKnownImplementors(GrpcDotNames.BINDABLE_SERVICE);
 
+        // gRPC service plain full name should be unique enough; e.g. org.acme.example.GreeterGrpc
+        Set<String> grpcServices = new HashSet<>();
+
         for (ClassInfo service : bindableServices) {
             if (service.interfaceNames().contains(GrpcDotNames.MUTINY_BEAN)) {
                 // Ignore the generated beans
@@ -235,6 +238,9 @@ public class GrpcServerProcessor {
             if (Modifier.isAbstract(service.flags())) {
                 continue;
             }
+
+            checkForDuplicates(index, grpcServices, service);
+
             BindableServiceBuildItem item = new BindableServiceBuildItem(service.name());
             Set<String> blockingMethods = gatherBlockingOrVirtualMethodNames(service, index, false);
             Set<String> virtualMethods = gatherBlockingOrVirtualMethodNames(service, index, true);
@@ -246,6 +252,47 @@ public class GrpcServerProcessor {
             }
             bindables.produce(item);
         }
+    }
+
+    private static void checkForDuplicates(IndexView index, Set<String> grpcServices, ClassInfo serviceClass) {
+        AnnotationInstance grpcAnnotation = serviceClass.annotation(GrpcDotNames.GRPC_SERVICE);
+        if (grpcAnnotation == null) {
+            return;
+        }
+
+        // mutiny vs plain
+        // org.acme.example.MutinyGreeterGrpc$GreeterImplBase
+        // org.acme.example.GreeterGrpc$GreeterImplBase
+
+        DotName ibClassName = findImplBase(serviceClass, index);
+        if (ibClassName == null) {
+            log.warn("No ImplBase found for '" + serviceClass + "', cannot check for duplicates at build time.");
+            return;
+        }
+
+        String[] split = ibClassName.toString().split("\\$"); // find inner class
+        String serviceNameIB = split[1].replace("ImplBase", "");
+        String grpcGen = split[0];
+        // do we have a package
+        int p = grpcGen.lastIndexOf(".");
+        String prefix = p > 0 ? "." : ""; // just to make sure we don't replace some MyAbstractMutinyImplBase name by user, only generated
+        String serviceNameGrpc = grpcGen.replace(prefix + "Mutiny" + serviceNameIB + "Grpc", prefix + serviceNameIB + "Grpc");
+
+        if (!grpcServices.add(serviceNameGrpc)) {
+            throw new IllegalArgumentException("Duplicate service impl: " + serviceNameGrpc);
+        }
+    }
+
+    private static DotName findImplBase(ClassInfo classInfo, IndexView index) {
+        if (classInfo == null) {
+            return null; // check for null at the invocation, so we have original classInfo
+        }
+        DotName name = classInfo.name();
+        if (name.toString().endsWith("ImplBase")) {
+            return name;
+        }
+        Type superClazz = index.getClassByName(name).superClassType();
+        return findImplBase(superClazz != null ? index.getClassByName(superClazz.name()) : null, index);
     }
 
     /**
