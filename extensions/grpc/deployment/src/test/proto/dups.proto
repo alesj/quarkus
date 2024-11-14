@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.dups";
+option java_outer_classname = "DupsFooProto";
+option objc_class_prefix = "DF";
+
+package dups;
+
+service Poke {
+    rpc poke (PokeRequest) returns (PokeReply) {}
+}
+
+message PokeRequest {
+    string name = 1;
+}
+
+message PokeReply {
+    string message = 1;
+}

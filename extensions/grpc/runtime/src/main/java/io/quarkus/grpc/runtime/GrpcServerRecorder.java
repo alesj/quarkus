@@ -177,7 +177,6 @@ public class GrpcServerRecorder {
         }
 
         boolean reflectionServiceEnabled = configuration.enableReflectionService || launchMode == LaunchMode.DEVELOPMENT;
-
         if (reflectionServiceEnabled) {
             LOGGER.info("Registering gRPC reflection service");
             ReflectionServiceV1 reflectionServiceV1 = new ReflectionServiceV1(definitions);
@@ -261,7 +260,9 @@ public class GrpcServerRecorder {
         } catch (TimeoutException e) {
             LOGGER.error("Unable to start the gRPC server, still not listening after 1 minute");
         } catch (ExecutionException e) {
-            LOGGER.error("Unable to start the gRPC server", e.getCause());
+            Throwable cause = e.getCause();
+            LOGGER.error("Unable to start the gRPC server", cause);
+            throw new RuntimeException(cause);
         }
     }
 
@@ -325,11 +326,11 @@ public class GrpcServerRecorder {
             try {
                 future.get(1, TimeUnit.MINUTES);
             } catch (TimeoutException e) {
-                LOGGER.error("Failed to start grpc server in time", e);
+                LOGGER.error("Failed to start gRPC server in time", e);
             } catch (ExecutionException e) {
-                throw new RuntimeException("grpc server start failed", e);
+                throw new RuntimeException("Unable to start the gRPC server", e);
             } catch (InterruptedException e) {
-                LOGGER.warn("Waiting for grpc server start interrupted", e);
+                LOGGER.warn("Waiting for gRPC server start interrupted", e);
                 Thread.currentThread().interrupt();
             }
 
@@ -530,7 +531,6 @@ public class GrpcServerRecorder {
 
         applyTransportSecurityConfig(configuration, builder);
 
-        boolean reflectionServiceEnabled = configuration.enableReflectionService || launchMode == LaunchMode.DEVELOPMENT;
         List<GrpcServiceDefinition> toBeRegistered = collectServiceDefinitions(grpcContainer.getServices());
         List<ServerServiceDefinition> definitions = new ArrayList<>();
 
@@ -547,6 +547,7 @@ public class GrpcServerRecorder {
             definitions.add(service.definition);
         }
 
+        boolean reflectionServiceEnabled = configuration.enableReflectionService || launchMode == LaunchMode.DEVELOPMENT;
         if (reflectionServiceEnabled) {
             LOGGER.info("Registering gRPC reflection service");
             builder.addService(ServerInterceptors.intercept(new ReflectionServiceV1(definitions), globalInterceptors));

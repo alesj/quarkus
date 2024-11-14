@@ -148,17 +148,18 @@ public class GrpcServerProcessor {
                 continue;
             }
             DotName mutinyImplBase = generatedBean.superName();
+            // Should probably never be 0 ... ?
             if (index.getIndex().getAllKnownSubclasses(mutinyImplBase).size() != 1) {
-                // Some class extends the mutiny impl base
-                continue;
+                // Some other class also extends the mutiny impl base -- 1 is this generated gRPC "bean" class
+                throw new IllegalStateException("Duplicated gRPC service: " + mutinyImplBase);
             }
             String mutinyImplBaseName = mutinyImplBase.toString();
             // Now derive the original impl base
             // e.g. examples.MutinyGreeterGrpc.GreeterImplBase -> examples.GreeterGrpc.GreeterImplBase
             DotName implBase = DotName.createSimple(mutinyImplBaseName.replace(MutinyGrpcGenerator.CLASS_PREFIX, ""));
             if (!index.getIndex().getAllKnownSubclasses(implBase).isEmpty()) {
-                // Some class extends the impl base
-                continue;
+                // Some class already extends the impl base
+                throw new IllegalStateException("Duplicated gRPC service: " + implBase);
             }
             // Finally, exclude some packages
             boolean excluded = false;
@@ -235,6 +236,7 @@ public class GrpcServerProcessor {
             if (Modifier.isAbstract(service.flags())) {
                 continue;
             }
+
             BindableServiceBuildItem item = new BindableServiceBuildItem(service.name());
             Set<String> blockingMethods = gatherBlockingOrVirtualMethodNames(service, index, false);
             Set<String> virtualMethods = gatherBlockingOrVirtualMethodNames(service, index, true);

@@ -21,8 +21,12 @@ public class ReflectionServiceV1alpha extends MutinyServerReflectionGrpc.ServerR
 
     private final GrpcServerIndex index;
 
+    public ReflectionServiceV1alpha(GrpcServerIndex index) {
+        this.index = index;
+    }
+
     public ReflectionServiceV1alpha(List<ServerServiceDefinition> definitions) {
-        index = new GrpcServerIndex(definitions);
+        this(new GrpcServerIndex(definitions));
     }
 
     @Override
