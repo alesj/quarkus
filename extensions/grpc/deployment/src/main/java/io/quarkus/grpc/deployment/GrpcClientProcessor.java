@@ -63,6 +63,7 @@ import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.grpc.GrpcClientMarker;
 import io.quarkus.grpc.MutinyClient;
 import io.quarkus.grpc.RegisterClientInterceptor;
 import io.quarkus.grpc.deployment.GrpcClientBuildItem.ClientInfo;
@@ -90,7 +91,7 @@ public class GrpcClientProcessor {
     @BuildStep
     void registerBeans(BuildProducer<AdditionalBeanBuildItem> beans) {
         // @GrpcClient is a CDI qualifier
-        beans.produce(new AdditionalBeanBuildItem(GrpcClient.class, RegisterClientInterceptor.class));
+        beans.produce(new AdditionalBeanBuildItem(GrpcClient.class, GrpcClientMarker.class, RegisterClientInterceptor.class));
         beans.produce(AdditionalBeanBuildItem.builder().setUnremovable().addBeanClasses(GrpcClientConfigProvider.class,
                 GrpcClientInterceptorContainer.class, IOThreadClientInterceptor.class).build());
     }
@@ -229,6 +230,7 @@ public class GrpcClientProcessor {
                     ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem.configure(GrpcDotNames.CHANNEL)
                             .addQualifier().annotation(GrpcDotNames.GRPC_CLIENT).addValue("value", client.getClientName())
                             .done()
+                            .addQualifier().annotation(GrpcDotNames.GRPC_CLIENT_MARKER).done()
                             .scope(Singleton.class)
                             .unremovable()
                             .forceApplicationClass()
@@ -253,6 +255,7 @@ public class GrpcClientProcessor {
                     String clientName = client.getClientName();
                     ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem.configure(clientInfo.className)
                             .addQualifier().annotation(GrpcDotNames.GRPC_CLIENT).addValue("value", clientName).done()
+                            .addQualifier().annotation(GrpcDotNames.GRPC_CLIENT_MARKER).done()
                             // Only the mutiny client can use the Application scope, the others are "final" and so need Singleton.
                             // Using @ApplicationScoped allows the usage of @InjectMock
                             .scope(clientInfo.type == ClientType.MUTINY_CLIENT ? ApplicationScoped.class : Singleton.class)

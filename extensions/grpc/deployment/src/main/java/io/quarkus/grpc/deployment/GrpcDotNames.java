@@ -15,6 +15,7 @@ import io.grpc.stub.AbstractStub;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.grpc.GlobalInterceptor;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.grpc.GrpcClientMarker;
 import io.quarkus.grpc.GrpcService;
 import io.quarkus.grpc.MutinyBean;
 import io.quarkus.grpc.MutinyClient;
@@ -35,6 +36,7 @@ public class GrpcDotNames {
     public static final DotName BINDABLE_SERVICE = DotName.createSimple(BindableService.class.getName());
     public static final DotName CHANNEL = DotName.createSimple(Channel.class.getName());
     public static final DotName GRPC_CLIENT = DotName.createSimple(GrpcClient.class.getName());
+    public static final DotName GRPC_CLIENT_MARKER = DotName.createSimple(GrpcClientMarker.class.getName());
     public static final DotName GRPC_SERVICE = DotName.createSimple(GrpcService.class.getName());
 
     public static final DotName BLOCKING = DotName.createSimple(Blocking.class.getName());
