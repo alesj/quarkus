@@ -25,6 +25,12 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-grpc-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>animal-sniffer-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
