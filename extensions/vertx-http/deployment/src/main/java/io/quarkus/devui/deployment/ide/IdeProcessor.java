@@ -13,6 +13,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.ide.EffectiveIdeBuildItem;
@@ -22,11 +23,13 @@ import io.quarkus.utilities.OS;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 import io.quarkus.vertx.http.runtime.ide.IdeRecorder;
 
 /**
  * Processor for Ide interaction in Dev UI
  */
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class IdeProcessor {
     private static final Logger log = Logger.getLogger(IdeProcessor.class);
     private static final Map<String, String> LANG_TO_EXT = Map.of("java", "java", "kotlin", "kt");

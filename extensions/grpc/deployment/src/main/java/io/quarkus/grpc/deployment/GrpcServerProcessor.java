@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -690,8 +691,9 @@ public class GrpcServerProcessor {
             List<BindableServiceBuildItem> bindables,
             List<RecorderBeanInitializedBuildItem> orderEnforcer,
             LaunchModeBuildItem launchModeBuildItem,
-            VertxWebRouterBuildItem routerBuildItem,
-            VertxBuildItem vertx, Capabilities capabilities,
+            Optional<VertxWebRouterBuildItem> routerBuildItemOpt,
+            Optional<VertxBuildItem> vertxOpt,
+            Capabilities capabilities,
             List<FilterBuildItem> filterBuildItems,
             // used to ensure that gRPC server starts after OTel has been set up
             @SuppressWarnings("unused") BeanContainerBuildItem beanContainerBuildItem) {
@@ -710,11 +712,17 @@ public class GrpcServerProcessor {
             }
         }
 
+        boolean isVertxEnabled = routerBuildItemOpt.isPresent() && vertxOpt.isPresent();
+        if (!isVertxEnabled) {
+            return null;
+        }
+
         if (!bindables.isEmpty()
                 || (LaunchMode.current() == LaunchMode.DEVELOPMENT && buildTimeConfig.devMode().forceServerStart())) {
             //Uses mainrouter when the 'quarkus.http.root-path' is not '/'
             Map<Integer, Handler<RoutingContext>> securityHandlers = null;
             final RuntimeValue<Router> routerRuntimeValue;
+            VertxWebRouterBuildItem routerBuildItem = routerBuildItemOpt.get();
             if (routerBuildItem.getMainRouter() != null) {
                 routerRuntimeValue = routerBuildItem.getMainRouter();
                 if (capabilities.isPresent(Capability.SECURITY)) {
@@ -730,11 +738,13 @@ public class GrpcServerProcessor {
             } else {
                 routerRuntimeValue = routerBuildItem.getHttpRouter();
             }
+            VertxBuildItem vertx = vertxOpt.get();
             recorder.initializeGrpcServer(vertx.getVertx(), routerRuntimeValue,
                     config, shutdown, blocking, virtuals, launchModeBuildItem.getLaunchMode(),
                     capabilities.isPresent(Capability.SECURITY), securityHandlers);
             return new ServiceStartBuildItem(GRPC_SERVER);
         }
+
         return null;
     }
 

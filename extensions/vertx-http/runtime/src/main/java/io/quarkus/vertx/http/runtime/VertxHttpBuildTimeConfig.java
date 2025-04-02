@@ -20,6 +20,12 @@ import io.vertx.core.http.ClientAuth;
 @ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
 public interface VertxHttpBuildTimeConfig {
     /**
+     * Do we start the HTTP server, etc
+     */
+    @WithDefault("true")
+    boolean enabled();
+
+    /**
      * The HTTP root path. All web content will be served relative to this root path.
      */
     @WithDefault("/")

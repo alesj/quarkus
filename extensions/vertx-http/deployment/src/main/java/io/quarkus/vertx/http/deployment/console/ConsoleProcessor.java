@@ -29,6 +29,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.builditem.ConfigDescriptionBuildItem;
 import io.quarkus.deployment.builditem.ConsoleCommandBuildItem;
@@ -42,8 +43,10 @@ import io.quarkus.dev.spi.DevModeType;
 import io.quarkus.devui.runtime.config.ConfigDescription;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 import io.quarkus.vertx.http.runtime.devmode.ConfigDescriptionsManager;
 
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class ConsoleProcessor {
 
     static volatile ConsoleStateManager.ConsoleContext context;

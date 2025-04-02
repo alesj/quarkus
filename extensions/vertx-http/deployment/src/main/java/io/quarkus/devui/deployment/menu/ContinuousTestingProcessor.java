@@ -9,6 +9,7 @@ import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
@@ -23,10 +24,12 @@ import io.quarkus.devui.runtime.continuoustesting.ContinuousTestingRecorder;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.buildtime.BuildTimeActionBuildItem;
 import io.quarkus.devui.spi.page.Page;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 
 /**
  * This creates Continuous Testing Page
  */
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class ContinuousTestingProcessor {
 
     @Record(ExecutionTime.RUNTIME_INIT)

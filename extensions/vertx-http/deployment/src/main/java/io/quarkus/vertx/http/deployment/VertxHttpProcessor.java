@@ -32,6 +32,7 @@ import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
@@ -82,6 +83,7 @@ import io.vertx.core.http.impl.Http1xServerRequest;
 import io.vertx.core.impl.VertxImpl;
 import io.vertx.ext.web.Router;
 
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 class VertxHttpProcessor {
 
     private static final String META_INF_SERVICES_EXCHANGE_ATTRIBUTE_BUILDER = "META-INF/services/io.quarkus.vertx.http.runtime.attribute.ExchangeAttributeBuilder";

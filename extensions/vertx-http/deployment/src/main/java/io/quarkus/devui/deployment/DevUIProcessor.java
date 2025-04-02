@@ -36,6 +36,7 @@ import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
@@ -74,6 +75,7 @@ import io.quarkus.vertx.http.deployment.FilterBuildItem;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 import io.quarkus.vertx.http.deployment.webjar.WebJarBuildItem;
 import io.quarkus.vertx.http.deployment.webjar.WebJarResourcesFilter;
 import io.quarkus.vertx.http.deployment.webjar.WebJarResultsBuildItem;
@@ -89,6 +91,7 @@ import io.vertx.ext.web.RoutingContext;
  *
  * This also find all jsonrpc methods and make them available in the jsonRPC Router
  */
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class DevUIProcessor {
     private static final String FOOTER_LOG_NAMESPACE = "devui-footer-log";
     private static final String DEVUI = "dev-ui";

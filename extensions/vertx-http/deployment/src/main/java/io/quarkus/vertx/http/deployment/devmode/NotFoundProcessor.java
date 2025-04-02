@@ -15,11 +15,13 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.dev.spi.DevModeType;
 import io.quarkus.vertx.http.deployment.HttpRootPathBuildItem;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 import io.quarkus.vertx.http.deployment.VertxWebRouterBuildItem;
 import io.quarkus.vertx.http.runtime.devmode.AdditionalRouteDescription;
 import io.quarkus.vertx.http.runtime.devmode.ResourceNotFoundData;
@@ -28,6 +30,7 @@ import io.quarkus.vertx.http.runtime.devmode.RouteDescription;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class NotFoundProcessor {
 
     private static final String META_INF_RESOURCES = "META-INF/resources";

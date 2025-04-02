@@ -18,12 +18,15 @@ import io.quarkus.arc.processor.InterceptorInfo;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
+import io.quarkus.vertx.http.deployment.VertxHttpEnabled;
 import io.quarkus.vertx.http.runtime.devmode.ArcDevRecorder;
 
+@BuildSteps(onlyIf = VertxHttpEnabled.class)
 public class ArcDevProcessor {
     private static final String BEAN_DEPENDENCIES = "io.quarkus.arc.beanDependencies";
 
