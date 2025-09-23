@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
+import org.objectweb.asm.ClassVisitor;
 
 import io.grpc.internal.ServerImpl;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -114,9 +116,26 @@ public class GrpcServerProcessor {
     private static final String KEY_STORE = SSL_PREFIX + "key-store";
     private static final String TRUST_STORE = SSL_PREFIX + "trust-store";
 
+    private static final String REFLECT_DATA_CLASS_NAME = "org.apache.avro.reflect.ReflectData";
+
     @BuildStep
     MinNettyAllocatorMaxOrderBuildItem setMinimalNettyMaxOrderSize() {
         return new MinNettyAllocatorMaxOrderBuildItem(3);
+    }
+
+    @BuildStep
+    BytecodeTransformerBuildItem fixAvroReflectData() {
+        return new BytecodeTransformerBuildItem.Builder()
+                .setClassToTransform(REFLECT_DATA_CLASS_NAME)
+                .setCacheable(true)
+                .setVisitorFunction(
+                        new BiFunction<>() {
+                            @Override
+                            public ClassVisitor apply(String s, ClassVisitor classVisitor) {
+                                return new ReflectDataClassVisitor(classVisitor);
+                            }
+                        })
+                .build();
     }
 
     @BuildStep
