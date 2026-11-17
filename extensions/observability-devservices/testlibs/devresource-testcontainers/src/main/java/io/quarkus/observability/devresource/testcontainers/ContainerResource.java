@@ -17,6 +17,12 @@ import io.quarkus.observability.devresource.DevResourceLifecycleManager;
 public abstract class ContainerResource<T extends GenericContainer<T>, C extends ContainerConfig>
         implements DevResourceLifecycleManager<C> {
 
+    protected static final String OTEL_OTLP_ENDPOINT = "quarkus.otel.exporter.otlp.endpoint";
+    protected static final String OTEL_OTLP_TRACES_ENDPOINT = "quarkus.otel.exporter.otlp.traces.endpoint";
+    protected static final String OTEL_OTLP_METRICS_ENDPOINT = "quarkus.otel.exporter.otlp.metrics.endpoint";
+    protected static final String OTEL_OTLP_LOGS_ENDPOINT = "quarkus.otel.exporter.otlp.logs.endpoint";
+    protected static final String MICROMETER_OTLP_URL = "quarkus.micrometer.export.otlp.url";
+
     protected T container;
     protected Container<C> wrapper;
 

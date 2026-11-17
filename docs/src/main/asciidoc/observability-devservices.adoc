@@ -6,7 +6,7 @@ https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
 = Observability Dev Services
 include::_attributes.adoc[]
 :summary: Entry point for Observability DevServices
-:topics: observability,grafana,lgtm,prometheus,victoriametrics,jaeger,otel,otlp
+:topics: observability,grafana,lgtm,elastic,elasticsearch,kibana,apm,prometheus,victoriametrics,jaeger,otel,otlp
 :extensions: io.quarkus:quarkus-observability-devservices
 
 We are already familiar with xref:dev-services.adoc[Dev Service] concept, but in the case of Observability we need a way to orchestrate and connect more than a single Dev Service, usually a whole stack of them; e.g. a metrics agent periodically scraping application for metrics, pushing them into timeseries database, and Grafana feeding graphs of this timeseries data.
@@ -36,6 +36,7 @@ Make sure you set the `scope` of these sink dependencies to `provided`, otherwis
 ----
 ====
 
-Let's see how all of this looks in practice, with the usual `all-in-one` Grafana usage, in the form of https://github.com/grafana/docker-otel-lgtm[OTel-LGTM] Docker image.
+Let's see how all of this looks in practice, with the existing `all-in-one` observability stacks:
 
 * xref:observability-devservices-lgtm.adoc[Getting Started with Grafana-OTel-LGTM]
+* xref:observability-devservices-elastic.adoc[Getting Started with Elastic (Elasticsearch, Kibana, APM Server)]

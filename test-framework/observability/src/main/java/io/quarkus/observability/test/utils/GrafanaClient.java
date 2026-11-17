@@ -45,17 +45,19 @@ public class GrafanaClient {
             HttpResponse.BodyHandler<T> bodyHandler,
             BiConsumer<HttpResponse<T>, T> consumer) {
         try {
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(URI.create(baseUrl + path));
-            if (username != null && password != null) {
-                String credentials = username + ":" + password;
-                String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-                builder.header("Authorization", "Basic " + encodedCredentials);
-            }
-            HttpRequest request = method.apply(builder).build();
+            HttpResponse<T> response;
+            try (HttpClient httpClient = HttpClient.newHttpClient()) {
+                HttpRequest.Builder builder = HttpRequest.newBuilder()
+                                                         .uri(URI.create(baseUrl + path));
+                if (username != null && password != null) {
+                    String credentials = username + ":" + password;
+                    String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+                    builder.header("Authorization", "Basic " + encodedCredentials);
+                }
+                HttpRequest request = method.apply(builder).build();
 
-            HttpResponse<T> response = httpClient.send(request, bodyHandler);
+                response = httpClient.send(request, bodyHandler);
+            }
             int code = response.statusCode();
             if (code < 200 || code > 299) {
                 throw new IllegalStateException("Bad response: " + code + " >> " + response.body());

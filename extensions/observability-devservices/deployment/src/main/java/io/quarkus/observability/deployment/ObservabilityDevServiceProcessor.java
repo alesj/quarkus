@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,8 +34,10 @@ import io.quarkus.deployment.dev.devservices.ContainerInfo;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.dev.devservices.RunningContainer;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.devservices.common.ComposeLocator;
 import io.quarkus.devservices.common.ContainerLocator;
+import io.quarkus.maven.dependency.ArtifactCoords;
 import io.quarkus.observability.common.config.ContainerConfig;
 import io.quarkus.observability.common.config.ContainerConfigUtil;
 import io.quarkus.observability.common.config.ModulesConfiguration;
@@ -78,6 +81,7 @@ class ObservabilityDevServiceProcessor {
             ObservabilityConfiguration configuration,
             DevServicesComposeProjectBuildItem composeProjectBuildItem,
             DevServicesConfig devServicesConfig,
+            CurateOutcomeBuildItem curateOutcomeBuildItem,
             BuildProducer<DevServicesResultBuildItem> services,
             BuildProducer<RunTimeConfigurationDefaultBuildItem> properties,
             BuildProducer<DevResourceEnabledBuildItem> enabledResources,
@@ -106,6 +110,18 @@ class ObservabilityDevServiceProcessor {
         //noinspection ResultOfMethodCallIgnored
         resources.stream().collect(Collectors.toMap(this::devId, Function.identity()));
 
+        // In dev mode, Quarkus workspace resolution adds all sibling modules from
+        // the same parent POM to the classpath, even if they are not declared dependencies.
+        // This causes ServiceLoader to discover dev resources from sibling sink modules
+        // (e.g. LGTM devresource appears when only Elastic is a dependency).
+        // Filter to actual dependencies: workspace modules that are real transitive deps
+        // get the RELOADABLE flag; workspace-resolved siblings that were only added by
+        // workspace spillover do not.
+        Set<String> declaredDeps = curateOutcomeBuildItem.getApplicationModel().getDependencies().stream()
+                .filter(d -> !d.isWorkspaceModule() || d.isReloadable() || d.isDirect())
+                .map(ArtifactCoords::getArtifactId)
+                .collect(Collectors.toSet());
+
         ExtensionsCatalog catalog = new ExtensionsCatalog(
                 QuarkusClassLoader::isResourcePresentAtRuntime,
                 QuarkusClassLoader::isClassPresentAtRuntime,
@@ -116,6 +132,12 @@ class ObservabilityDevServiceProcessor {
 
         for (DevResourceLifecycleManager<ContainerConfig> dev : resources) {
             String devId = devId(dev);
+
+            String sinkArtifactId = "quarkus-observability-devservices-" + devId.toLowerCase();
+            if (!declaredDeps.contains(sinkArtifactId)) {
+                log.debugf("Skipping Dev Service %s: sink module %s is not a declared dependency", devId, sinkArtifactId);
+                continue;
+            }
 
             ContainerConfig currentDevServicesConfiguration = dev.config(configuration, catalog);
 

@@ -31,12 +31,6 @@ public class LgtmResource extends ContainerResource<LgtmContainer, LgtmConfig> {
     protected static final Set<String> SCRAPING_REGISTRIES = Set.of(
             "io.micrometer.prometheusmetrics.PrometheusMeterRegistry");
 
-    private static final String OTEL_OTLP_ENDPOINT = "quarkus.otel.exporter.otlp.endpoint";
-    private static final String OTEL_OTLP_TRACES_ENDPOINT = "quarkus.otel.exporter.otlp.traces.endpoint";
-    private static final String OTEL_OTLP_METRICS_ENDPOINT = "quarkus.otel.exporter.otlp.metrics.endpoint";
-    private static final String OTEL_OTLP_LOGS_ENDPOINT = "quarkus.otel.exporter.otlp.logs.endpoint";
-    private static final String MICROMETER_OTLP_URL = "quarkus.micrometer.export.otlp.url";
-
     protected static final Function<String, Boolean> TCCL_FN = s -> {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {

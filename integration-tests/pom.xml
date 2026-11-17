@@ -268,6 +268,7 @@
                 <module>flyway</module>
                 <module>liquibase</module>
                 <module>liquibase-mongodb</module>
+                <module>observability-elastic</module>
                 <module>observability-lgtm</module>
                 <module>observability-lgtm-fixedports</module>
                 <module>observability-lgtm-prometheus</module>

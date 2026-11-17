@@ -2,8 +2,9 @@
 
 export const templates = {
     // Metadata
-    'quarkus-observability-devservices-meta-description':  'OpenTelemetry LGTM Stack (Loki for logs, Grafana for visualization, Tempo for traces, and Mimir for metrics)',
+    'quarkus-observability-devservices-meta-description':  'Observability Dev Services (LGTM or Elastic stack)',
     // Pages
-    'quarkus-observability-devservices-lgtm':  'LGTM'
+    'quarkus-observability-devservices-lgtm':  'LGTM',
+    'quarkus-observability-devservices-elastic':  'Elastic'
 };
 

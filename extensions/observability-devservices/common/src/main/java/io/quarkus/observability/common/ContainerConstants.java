@@ -19,6 +19,14 @@ public final class ContainerConstants {
     public static final String OTEL_GRPC_PROTOCOL = "grpc";
     public static final String OTEL_HTTP_PROTOCOL = "http/protobuf";
 
+    // Elastic
+
+    public static final String ELASTIC = "docker.io/alesj/otel-elastic:0.1.0";
+
+    public static final int ELASTICSEARCH_PORT = 9200;
+    public static final int KIBANA_PORT = 5601;
+    public static final int APM_SERVER_PORT = 8200;
+
     // Overrides
 
     public static final int SCRAPING_INTERVAL = 10;

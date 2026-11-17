@@ -157,4 +157,7 @@ The OpenTelemetry profiling signal, still under development, might be available 
 
 == See telemetry
 
-The xref:observability-devservices-lgtm.adoc[Grafana LGTM Dev Service] extension is available to visualize the telemetry data for logs, metrics and traces in Grafana.
+The following xref:observability-devservices.adoc[Observability Dev Services] are available to visualize telemetry data for logs, metrics and traces:
+
+* xref:observability-devservices-lgtm.adoc[Grafana LGTM Dev Service] — Grafana, Loki, Tempo, Mimir/Prometheus
+* xref:observability-devservices-elastic.adoc[Elastic Dev Service] — Elasticsearch, Kibana, APM Server
