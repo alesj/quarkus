@@ -11,4 +11,10 @@ public interface ModulesConfiguration {
      */
     @ConfigDocSection
     LgtmConfig lgtm();
+
+    /**
+     * Elastic observability configuration
+     */
+    @ConfigDocSection
+    ElasticConfig elastic();
 }

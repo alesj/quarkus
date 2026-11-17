@@ -17,6 +17,7 @@
         <module>devresource-common</module>
         <module>devresource-testcontainers</module>
         <module>devresource-lgtm</module>
+        <module>devresource-elastic</module>
     </modules>
 
 </project>

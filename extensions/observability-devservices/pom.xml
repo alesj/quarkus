@@ -21,6 +21,7 @@
         <module>runtime</module>
         <!-- Simplified extension artifacts-->
         <module>sink/lgtm</module>
+        <module>sink/elastic</module>
     </modules>
 
 
