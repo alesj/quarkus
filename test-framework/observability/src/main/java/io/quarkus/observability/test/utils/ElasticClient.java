@@ -39,7 +39,7 @@ public class ElasticClient {
             HttpResponse<T> response;
             try (HttpClient httpClient = HttpClient.newHttpClient()) {
                 HttpRequest.Builder builder = HttpRequest.newBuilder()
-                                                         .uri(URI.create(url + path));
+                        .uri(URI.create(url + path));
                 if (username != null && password != null) {
                     String credentials = username + ":" + password;
                     String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
